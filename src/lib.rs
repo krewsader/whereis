@@ -8,12 +8,17 @@ pub struct Department {
     room: String,
 }
 
+pub struct Res {
+    department: Department,
+    score: usize,
+}
+
 impl fmt::Display for Department {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "\
             Department name: {}\n\
             Location: {}\n\
-            Example Room: {}", 
+            Example Room: {}\n", 
          self.name, self.location, self.room)
     }
 }
@@ -28,29 +33,33 @@ pub fn search(query: &str) {
     let mut levenshtein_matches = Vec::new();
 
     for department in data {
-        if matches_substring(query, &department.name) {
+        if department.name.contains(query){
             substring_matches.push(department);
-        } else if matches_levenshtein(query, &department.name) {
-            levenshtein_matches.push(department)
+        } else {
+            let dist = levenshtein(&department.name, query);
+            if dist < cmp::min(department.name.len(), query.len()) - 2 {
+                levenshtein_matches.push(Res {department, score: dist}) 
+            }
         }
     }
 
-    let num_results = substring_matches.len() + levenshtein_matches.len();
+    levenshtein_matches.sort_by(|a, b| a.score.cmp(&b.score));
 
-    println!(" Found {} results: ", num_results);
-    println!("Substring matches: ");
+    println!("Substring matches:\n");
     for department in substring_matches {
         println!("{}", department);
     }
-    println!("Misspelt matches: ");
-    for department in levenshtein_matches {
-        println!("{}", department);
+    println!("Misspelt matches:\n");
+    if !levenshtein_matches.is_empty() {
+        for i in 0..cmp::min(5, levenshtein_matches.len()) {
+            println!("{}", levenshtein_matches[i].department);
+        }
     }
+
 
 }
 
 pub fn add(name: String, location: String, room: String) {
-    println!("Starting add");
     let mut departments = match read_data() {
         Ok(departments) => departments,
         Err(e) => panic!("Error reading data: {}", e),
@@ -87,13 +96,6 @@ pub fn levenshtein(s: &str, t: &str) -> usize {
     row[m]
 }
 
-pub fn matches_levenshtein(s: &str, t: &str) -> bool {
-    let dist = levenshtein(s, t) as f64;
-    let len = s.len() as f64;
-
-    dist <= len * 0.3
-}
-
 pub fn matches_substring(s: &str, t: &str) -> bool {
     t.contains(s)
 }
@@ -104,7 +106,6 @@ fn read_data() -> Result<Vec<Department>, Box<dyn Error>> {
 
     for department in rdr.deserialize() {
         let department: Department = department?;
-        println!("{:?}", department);
         result.push(department);
     }
 
