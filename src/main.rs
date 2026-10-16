@@ -1,5 +1,12 @@
+use std::env;
 use whereis;
 
 fn main() {
-    whereis::add(String::from("B7"), String::from("Haus B, 7. Stock"), String::from("B701"));
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 2 {
+        println!("Bitte Suchbegriff eingeben");
+    } else {
+        let query = &args[1];
+        whereis::search(query);
+    }
 }

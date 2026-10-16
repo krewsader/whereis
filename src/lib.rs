@@ -10,9 +10,9 @@ pub struct Department {
 
 impl fmt::Display for Department {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, 
-        "   Department name: {}
-            Location: {}
+        write!(f, "\
+            Department name: {}\n\
+            Location: {}\n\
             Example Room: {}", 
          self.name, self.location, self.room)
     }
@@ -50,6 +50,7 @@ pub fn search(query: &str) {
 }
 
 pub fn add(name: String, location: String, room: String) {
+    println!("Starting add");
     let mut departments = match read_data() {
         Ok(departments) => departments,
         Err(e) => panic!("Error reading data: {}", e),
@@ -98,7 +99,7 @@ pub fn matches_substring(s: &str, t: &str) -> bool {
 }
 
 fn read_data() -> Result<Vec<Department>, Box<dyn Error>> {
-    let mut rdr = csv::Reader::from_reader(io::stdin());
+    let mut rdr = csv::Reader::from_path("data.csv").expect("Error creating reader for csv");
     let mut result = Vec::new();
 
     for department in rdr.deserialize() {
@@ -111,7 +112,7 @@ fn read_data() -> Result<Vec<Department>, Box<dyn Error>> {
 }
 
 fn write_data(departments: Vec<Department>) -> Result<(), Box<dyn Error>> {
-    let mut wtr = csv::Writer::from_path("data.csv")?;
+    let mut wtr = csv::Writer::from_path("data.csv").expect("Error creating writer for csv");
 
     for department in departments {
         match wtr.serialize(department) {

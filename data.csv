@@ -1,0 +1,16 @@
+name,location,room
+B7,"Haus B, 7. Stock",B701
+Beckenbodenzentrum,"Haus B, 8. Stock",B825
+Pneumologie,"Haus F, 3. Stock",F331
+"A2S / A2 Süd","Haus A, 2. Stock",A2200
+"A2N / A2 Nord","Haus A, 2. Stock",A2100
+"A3S / A3 Süd","Haus A, 3. Stock",A3200
+"A3N / A3 Nord","Haus A, 3. Stock",A3100
+"A4S / Süd","Haus A, 4. Stock",A4200
+"A4N / A4 Nord","Haus A, 4. Stock",A4100
+"A4P","Haus A, 4. Stock",A4302
+"IPS / Intensivpflegestation","Haus A, 1. Stock",A1111
+"AOZ / Ambulantes Operationszentrum","Haus A, 1. Stock",A1200
+"OPS / Operationszentrum","Haus A, 1. Stock",A1014
+Notfall,"Notfallzentrum, 1. Stock",N123
+
