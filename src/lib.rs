@@ -1,5 +1,5 @@
 use core::{num, panic};
-use std::{cmp, error::Error, fmt, io, process};
+use std::{cmp, error::Error, fmt, time::Instant };
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Department {
@@ -24,6 +24,8 @@ impl fmt::Display for Department {
 }
 
 pub fn search(query: &str) {
+    let now = Instant::now();
+
     let data = match read_data() {
         Ok(departments) => departments,
         Err(e) => panic!("Error reading data: {e}"),
@@ -37,14 +39,17 @@ pub fn search(query: &str) {
             substring_matches.push(department);
         } else {
             let dist = levenshtein(&department.name, query);
-            if dist < cmp::min(department.name.len(), query.len()) - 2 {
+            if dist < cmp::max(department.name.len(), query.len()) - 2 {
                 levenshtein_matches.push(Res {department, score: dist}) 
             }
         }
     }
 
     levenshtein_matches.sort_by(|a, b| a.score.cmp(&b.score));
+    let num_results = substring_matches.len() + levenshtein_matches.len();
+    let elapsed = now.elapsed();
 
+    println!("Found {} results in {} ns ({} ms)\n", num_results, elapsed.as_nanos(), elapsed.as_millis());
     println!("Substring matches:\n");
     for department in substring_matches {
         println!("{}", department);
