@@ -15,11 +15,9 @@ pub struct Res {
 
 impl fmt::Display for Department {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "\
-            Department name: {}\n\
-            Location: {}\n\
-            Example Room: {}\n", 
-         self.name, self.location, self.room)
+        writeln!(f, "   Department name: {}", self.name)?;
+        writeln!(f, "   Location: {}", self.location)?;
+        writeln!(f, "   Example Room: {}", self.room)
     }
 }
 
