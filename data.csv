@@ -13,4 +13,14 @@ Pneumologie,"Haus F, 3. Stock",F331
 "AOZ / Ambulantes Operationszentrum","Haus A, 1. Stock",A1200
 "OPS / Operationszentrum","Haus A, 1. Stock",A1014
 Notfall,"Notfallzentrum, 1. Stock",N123
+"Orthopädie Empfang" ,"Verbindungstrakt, 1. Stock",V1008
+"Orthopädie Büro","Verbindungstrakt, 2. Stock",N259
+"Patientenabrechnung / Patientenmanagement","Haus H, 1. Stock",H106
+"Angiologie","Haus A, EG",C011
+"Gastroenterologie","Haus A, EG",A0028
+"Apotheke","Haus A, EG",A0009
+"Frauenklinik","Untersuchung (neben Haus B), 2. Stock",U2000
+"Medizinisches Ambulatorium","Notfallzentrum, 2. Stock",None
+"Radiologie","ROBO (neben Haus B), EG",RO011
+"Onkologie","Haus B, 5. und 8. Stock",None
 
