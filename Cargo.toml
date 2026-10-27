@@ -6,3 +6,6 @@ edition = "2024"
 [dependencies]
 csv = "1.4.0"
 serde = { version = "1.0.229", features = ["derive"] }
+hyper = "0.14"
+tokio = { version =  "1.54.0", features = ["full"] }
+mini-redis = "0.4"

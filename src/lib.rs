@@ -1,4 +1,4 @@
-use core::{num, panic};
+use core::panic;
 use std::{cmp, error::Error, fmt, time::Instant };
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -98,6 +98,23 @@ pub fn levenshtein(s: &str, t: &str) -> usize {
 
     row[m]
 }
+
+pub fn levenshtein_damerau(s: &str, t: &str) -> usize {
+    let s = s.as_bytes();
+    let t = t.as_bytes();
+    let n = s.len();
+    let m = t.len();
+
+    let mut dp: Vec<Vec<usize>> = Vec::new();
+
+    dp.push((0..=m).collect());
+    for j in 0..=m {
+        dp[j].push(j);
+    }
+
+    0
+}
+
 
 pub fn matches_substring(s: &str, t: &str) -> bool {
     t.contains(s)
