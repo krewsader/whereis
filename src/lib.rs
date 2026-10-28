@@ -1,5 +1,5 @@
 use core::panic;
-use std::{cmp, error::Error, fmt::{self, Write}, time::Instant };
+use std::{cmp, error::Error, fmt::{self, Write}, io, time::Instant };
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Department {
@@ -63,14 +63,33 @@ pub fn search(query: &str) -> String {
     output
 }
 
-pub fn add(name: String, location: String, room: String) {
+pub fn add(name: String, location: String, room: String) -> Result<(), &'static str> {
     let mut departments = match read_data() {
         Ok(departments) => departments,
-        Err(e) => panic!("Error reading data: {}", e),
+        Err(_) => {
+            return Err("Error reading data")
+        }
     };
 
+    println!("{}", name);
+    let s = name.to_lowercase();
+
+    for department in &departments {
+        let t = department.name.to_lowercase();
+        if t.contains(&s) || s.contains(&t) {
+            println!("{} {}", s, t);
+            return Err("Department already exists in database");
+        }
+    }
+
     departments.push( Department { name, location, room });
-    write_data(departments).expect("Error writing data");
+    match write_data(departments) {
+        Ok(_) => { }
+        Err(_) => {
+            return Err("Error writing data");
+        }
+    }
+    Ok(())
 }
 
 // might be replaced with damerau-levenshtein
