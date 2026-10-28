@@ -1,26 +1,17 @@
 use axum::{Router, extract::Query, response::Html, routing::get};
-use mini_redis::{
-    Command::{self, Get, Set},
-    Connection, Frame,
-};
-use reqwest;
 use std::collections::HashMap;
-use std::env;
-use std::io::Write;
-use std::{fs, io::BufReader};
 use tokio::net::TcpListener;
-use tokio::net::TcpStream;
 use whereis;
 
 #[tokio::main]
 async fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 2 {
-        println!("Bitte Suchbegriff eingeben");
-    } else {
-        let query = &args[1];
-        whereis::search(query);
-    }
+    // let args: Vec<String> = env::args().collect();
+    // if args.len() < 2 {
+    //     println!("Bitte Suchbegriff eingeben");
+    // } else {
+    //     let query = &args[1];
+    //     whereis::search(query);
+    // }
 
     let app = Router::new()
         .route("/", get(|| async { Html(include_str!("../index.html")) }))
