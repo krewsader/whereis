@@ -26,7 +26,7 @@ pub fn search(query: &str) -> String {
 
     let data = match read_data() {
         Ok(departments) => departments,
-        Err(e) => panic!("Error reading data: {e}"),
+        Err(e) => panic!("Error reading data: {}", e),
     };
 
     let mut substring_matches = Vec::new();
@@ -48,15 +48,15 @@ pub fn search(query: &str) -> String {
     let elapsed = now.elapsed();
     let mut output = String::new();
 
-    writeln!(&mut output, "Found {} results in {} ns ({} ms)\n", num_results, elapsed.as_nanos(), elapsed.as_millis()).unwrap();
-    writeln!(&mut output, "Substring matches:\n").unwrap();
+    writeln!(&mut output, "Found {} results in {} ns ({} ms)\n", num_results, elapsed.as_nanos(), elapsed.as_millis()).unwrap_or_else(|_| ());
+    writeln!(&mut output, "Substring matches:\n").unwrap_or_else(|_| ());
     for department in substring_matches {
-        writeln!(&mut output, "{}", department).unwrap();
+        writeln!(&mut output, "{}", department).unwrap_or_else(|_| ());
     }
-    writeln!(&mut output, "Misspelt matches:\n").unwrap();
+    writeln!(&mut output, "Misspelt matches:\n").unwrap_or_else(|_| ());
     if !levenshtein_matches.is_empty() {
         for i in 0..cmp::min(5, levenshtein_matches.len()) {
-            writeln!(&mut output, "{}", levenshtein_matches[i].department).unwrap();
+            writeln!(&mut output, "{}", levenshtein_matches[i].department).unwrap_or_else(|_| ());
         }
     }
 
@@ -161,7 +161,9 @@ fn write_data(departments: Vec<Department>) -> Result<(), Box<dyn Error>> {
     for department in departments {
         match wtr.serialize(department) {
             Ok(_) => continue,
-            Err(e) => panic!("Error writing data to data.txt: {}", e)
+            Err(e) => {
+                return Err(Box::new(e))
+            }
         };
     }
 

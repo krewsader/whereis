@@ -4,7 +4,7 @@ use tokio::net::TcpListener;
 use whereis;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // let args: Vec<String> = env::args().collect();
     // if args.len() < 2 {
     //     println!("Bitte Suchbegriff eingeben");
@@ -18,11 +18,13 @@ async fn main() {
         .route("/search", get(search))
         .route("/add", post(add));
 
-    let listener = TcpListener::bind("127.0.0.1:7878").await.unwrap();
+    let listener = TcpListener::bind("127.0.0.1:7878").await?;
 
     println!("Listening on http://127.0.0.1:7878");
 
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app).await?;
+
+    Ok(())
 }
 
 async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
@@ -51,45 +53,41 @@ async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
 }
 
 async fn add(Form(params): Form<HashMap<String, String>>) -> Html<String> {
-    let name = params.get("name").map(String::as_str).unwrap();
+    let name = params.get("name").map(String::as_str).unwrap_or("");
     let location = params.get("location").map(String::as_str).unwrap_or("");
     let room = params.get("room").map(String::as_str).unwrap_or("None");
 
-    match whereis::add(name.to_string(), location.to_string(), room.to_string()) {
-        Ok(_) => {}
-        Err(e) => {
-            let html = format!(
-                r#"<DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8"
-            <title>Failure</title>
-        </head>
-        <body>
-            <h1>Error: {}</h1>
-            <a href="/">Back to search</a>
-        </body>
-        </html>"#,
-                e
-            );
+    let title;
+    let content;
 
-            return Html(html);
+    match whereis::add(name.to_string(), location.to_string(), room.to_string()) {
+        Ok(_) => {
+            title = format!("Success");
+            content = format!("Sucessfully added department {} at {} with example room {}", name, location, room);
+        }
+        Err(e) => {
+            title = format!("Failure");
+            content = format!("Error adding department: {}", e);
         }
     };
 
+    result_page(&title, &content)
+}
+
+fn result_page(title: &str, content: &str) -> Html<String> {
     let html = format!(
         r#"<DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8"
-            <title>Success</title>
+            <title>{}</title>
         </head>
         <body>
-            <h1>Sucessfully added department {} at {} with example room {}</h1>
+            <h1>{}</h1>
             <a href="/">Back to search</a>
         </body>
         </html>"#,
-        name, location, room,
+        title, content,
     );
 
     Html(html)
