@@ -1,5 +1,5 @@
 use core::panic;
-use std::{cmp, error::Error, fmt, time::Instant };
+use std::{cmp, error::Error, fmt::{self, Write}, time::Instant };
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Department {
@@ -21,7 +21,7 @@ impl fmt::Display for Department {
     }
 }
 
-pub fn search(query: &str) {
+pub fn search(query: &str) -> String {
     let now = Instant::now();
 
     let data = match read_data() {
@@ -33,7 +33,7 @@ pub fn search(query: &str) {
     let mut levenshtein_matches = Vec::new();
 
     for department in data {
-        if department.name.contains(query){
+        if department.name.to_lowercase().contains(&query.to_lowercase()){
             substring_matches.push(department);
         } else {
             let dist = levenshtein(&department.name, query);
@@ -46,20 +46,21 @@ pub fn search(query: &str) {
     levenshtein_matches.sort_by(|a, b| a.score.cmp(&b.score));
     let num_results = substring_matches.len() + levenshtein_matches.len();
     let elapsed = now.elapsed();
+    let mut output = String::new();
 
-    println!("Found {} results in {} ns ({} ms)\n", num_results, elapsed.as_nanos(), elapsed.as_millis());
-    println!("Substring matches:\n");
+    writeln!(&mut output, "Found {} results in {} ns ({} ms)\n", num_results, elapsed.as_nanos(), elapsed.as_millis()).unwrap();
+    writeln!(&mut output, "Substring matches:\n").unwrap();
     for department in substring_matches {
-        println!("{}", department);
+        writeln!(&mut output, "{}", department).unwrap();
     }
-    println!("Misspelt matches:\n");
+    writeln!(&mut output, "Misspelt matches:\n").unwrap();
     if !levenshtein_matches.is_empty() {
         for i in 0..cmp::min(5, levenshtein_matches.len()) {
-            println!("{}", levenshtein_matches[i].department);
+            writeln!(&mut output, "{}", levenshtein_matches[i].department).unwrap();
         }
     }
 
-
+    output
 }
 
 pub fn add(name: String, location: String, room: String) {
@@ -74,8 +75,11 @@ pub fn add(name: String, location: String, room: String) {
 
 // might be replaced with damerau-levenshtein
 pub fn levenshtein(s: &str, t: &str) -> usize {
-    let s = s.as_bytes();
-    let t = t.as_bytes();
+
+    let binding = s.to_lowercase();
+    let s = binding.as_bytes();
+    let binding = t.to_lowercase();
+    let t = binding.as_bytes();
     let n = s.len();
     let m = t.len();
 

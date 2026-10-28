@@ -22,4 +22,8 @@ Notfall,"Notfallzentrum, 1. Stock",N123
 "Frauenklinik","Untersuchung (neben Haus B), 2. Stock",U2000
 "Medizinisches Ambulatorium","Notfallzentrum, 2. Stock",None
 "Radiologie","ROBO (neben Haus B), EG",RO011
-"Onkologie","Haus B, 5. und 8. Stock",None
+"Onkologie","Haus B, 5. und 8. Stock, Empfang 5. Stock",B503
+Urologie,"Haus C, 5. Stock",G568
+GOPS,"Haus A, -2. Stock",G217
+AEMP,"Haus A, 1. Stock",A1063
+Physiotherapie,"Haus F, 1. Stock",
