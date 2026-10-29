@@ -15,8 +15,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = Router::new()
         .route("/", get(|| async { Html(include_str!("../index.html")) }))
+        .route("/add",get(|| async { Html(include_str!("../add.html")) }))
         .route("/search", get(search))
-        .route("/add", post(add));
+        .route("/added", post(add));
 
     let listener = TcpListener::bind("127.0.0.1:7878").await?;
 

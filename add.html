@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Add Location</title>
+  </head>
+  <body>
+    <div style="display: flex; flex-direction: column; height: 20em; align-items: center; justify-content: center">
+      <h1>Add new Location</h1>
+      <form action="/added" method="POST" style="display: flex; flex-direction: column;">
+        <input type="text" id="name" name="name" placeholder="Department name" required >
+        <input type="text" id="location" name="location" placeholder="Location" required >
+        <input type="text" id="room" name="room" placeholder="Example room" >
+        <button type="submit">Add room</button>
+      </form>
+        <a href="/">Back to search</a>
+    </div>
+  </body>
+</html>

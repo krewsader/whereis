@@ -5,17 +5,15 @@
     <title>WhereIs</title>
   </head>
   <body>
-    <h1>Enter your search query</h1>
-    <form action="/search" method="GET">
-      <input type="search" id="query" name="query" placeholder="Where is..." required >
-      <button type="submit">Guide me</button>
-    </form>
-    <h1>Add new Location</h1>
-    <form action="/add" method="POST">
-      <input type="text" id="name" name="name" placeholder="Department name" required >
-      <input type="text" id="location" name="location" placeholder="Location" required >
-      <input type="text" id="room" name="room" placeholder="Example room" >
-      <button type="submit">Add room</button>
-    </form>
+    <div style="display: flex; flex-direction: column; min-height: 100vh; align-items: center; justify-content: center">
+      <div style="display: flex; flex-direction: column; height: 10em; align-items: center; justify-content: center">
+        <h1>Enter your search query</h1>
+        <form action="/search" method="GET">
+          <input type="search" id="query" name="query" placeholder="Where is..." required >
+          <button type="submit">Guide me</button>
+        </form>
+      </div>
+      <a href="/add">Add new location</a>
+    </div>
   </body>
 </html>
