@@ -1,4 +1,3 @@
-use core::panic;
 use std::{cmp, error::Error, fmt::{self, Write}, io, time::Instant };
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -15,9 +14,9 @@ pub struct Res {
 
 impl fmt::Display for Department {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "   Department name: {}", self.name)?;
-        writeln!(f, "   Location: {}", self.location)?;
-        writeln!(f, "   Example Room: {}", self.room)
+        writeln!(f, "<strong>Department name:</strong> {}", self.name)?;
+        writeln!(f, "<strong>Location:</strong> {}", self.location)?;
+        writeln!(f, "<strong>Example Room:</strong> {}", self.room)
     }
 }
 
@@ -26,7 +25,9 @@ pub fn search(query: &str) -> String {
 
     let data = match read_data() {
         Ok(departments) => departments,
-        Err(e) => panic!("Error reading data: {}", e),
+        Err(_) => {
+            return String::from("Error reading data");
+        }
     };
 
     let mut substring_matches = Vec::new();
@@ -48,17 +49,18 @@ pub fn search(query: &str) -> String {
     let elapsed = now.elapsed();
     let mut output = String::new();
 
-    writeln!(&mut output, "Found {} results in {} ns ({} ms)\n", num_results, elapsed.as_nanos(), elapsed.as_millis()).unwrap_or_else(|_| ());
-    writeln!(&mut output, "Substring matches:\n").unwrap_or_else(|_| ());
+    writeln!(&mut output, "<p style=\"margin: 5px\">Found {} results in {} ns ({} ms)</p>", num_results, elapsed.as_nanos(), elapsed.as_millis()).unwrap_or_else(|_| ());
+    writeln!(&mut output, "<div class=\"results\"><h2>Substring matches:</h2>").unwrap_or_else(|_| ());
     for department in substring_matches {
-        writeln!(&mut output, "{}", department).unwrap_or_else(|_| ());
+        writeln!(&mut output, "<div class=\"result\">{}</div>", department).unwrap_or_else(|_| ());
     }
-    writeln!(&mut output, "Misspelt matches:\n").unwrap_or_else(|_| ());
+    writeln!(&mut output, "</div><div class=\"results\"><h2>Misspelt matches:</h2>").unwrap_or_else(|_| ());
     if !levenshtein_matches.is_empty() {
         for i in 0..cmp::min(5, levenshtein_matches.len()) {
-            writeln!(&mut output, "{}", levenshtein_matches[i].department).unwrap_or_else(|_| ());
+            writeln!(&mut output, "<div class=\"result\">{}<div>", levenshtein_matches[i].department).unwrap_or_else(|_| ());
         }
     }
+    writeln!(&mut output, "</div>").unwrap_or_else(|_| ());
 
     output
 }

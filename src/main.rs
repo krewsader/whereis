@@ -31,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
     let query = params.get("query").map(String::as_str).unwrap_or("");
 
-    let results = whereis::search(query);
+    let results = format!(r#"{}"#, whereis::search(query));
 
     let html = format!(
         r#"<DOCTYPE html>
@@ -39,15 +39,53 @@ async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
         <head>
             <meta charset="UTF-8">
             <title>Results</title>
+
+            <style>
+                body {{
+                    margin: 0;
+                    font-family: Arial, sans-serif;
+                }}
+
+                h2 {{
+                    margin: 4px;
+                }}
+
+                pre {{
+                    margin: 0px;
+                }}
+
+               .container {{
+                   display: flex;
+                   flex-direction: column;
+                   align-items: center;
+                   justify-content: center;
+                   min-height: 100vh;
+               }} 
+
+               .results {{
+                    font-family: Arial, sans-serif;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    margin-top: 4px;
+                    margin-bottom: 16px;
+               }}
+
+               .result {{
+                font-family: Arial, sans-serif;
+               }}
+            </style>
         </head>
         <body>
-            <h1>Results for {}</h1>
+        <div class="container">
+            <h1>Results for "{}"</h1>
             <pre>{}</pre>
             <a href="/">Back to search</a>
+        </div>
         </body>
         </html>"#,
         escape_html(query),
-        escape_html(&results),
+        results,
     );
 
     Html(html)
