@@ -1,19 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
+<head>
+    <meta charset="UTF-8">
     <title>WhereIs</title>
-  </head>
-  <body>
-    <div style="display: flex; flex-direction: column; min-height: 100vh; align-items: center; justify-content: center">
-      <div style="display: flex; flex-direction: column; height: 10em; align-items: center; justify-content: center">
-        <h1>Enter your search query</h1>
-        <form action="/search" method="GET">
-          <input type="search" id="query" name="query" placeholder="Where is..." required >
-          <button type="submit">Guide me</button>
-        </form>
-      </div>
-      <a href="/add">Add new location</a>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .search-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input, button {
+            padding: 10px 12px;
+            font-size: 16px;
+        }
+
+        input {
+            width: 250px;
+        }
+
+        .back-link {
+          margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="search-section">
+            <h1>Enter your search query</h1>
+
+            <form action="/search" method="GET">
+                <input
+                    type="search"
+                    id="query"
+                    name="query"
+                    placeholder="Where is..."
+                    required
+                >
+                <button type="submit">Guide me</button>
+            </form>
+        </div>
+
+        <a href="/add" class="back-link">Add new location</a>
     </div>
-  </body>
+</body>
 </html>
