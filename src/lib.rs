@@ -1,4 +1,4 @@
-use std::{cmp, error::Error, fmt::{self, Write, write}, io, time::Instant };
+use std::{cmp, error::Error, fmt::{self, Write}, time::Instant };
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Department {

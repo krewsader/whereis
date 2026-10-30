@@ -1,6 +1,5 @@
 use axum::{Router, extract::Form, extract::Query, response::Html, routing::get, routing::post};
-use reqwest::dns::Name;
-use std::{collections::HashMap, result};
+use std::{collections::HashMap};
 use tokio::net::TcpListener;
 use whereis;
 
