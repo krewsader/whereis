@@ -1,8 +1,8 @@
 use axum::{Router, extract::Form, extract::Query, response::Html, routing::get, routing::post};
-use std::{collections::HashMap, fs::{self, OpenOptions}, io::Write};
+use std::{collections::HashMap, fs::{self}};
 use tokio::net::TcpListener;
 use whereis;
-use argon2::{Argon2, PasswordHasher, PasswordVerifier, PasswordHash};
+use argon2::{Argon2, PasswordVerifier, PasswordHash};
 
 
 #[tokio::main]
