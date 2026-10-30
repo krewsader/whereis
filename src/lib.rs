@@ -229,7 +229,7 @@ pub fn levenshtein(s: &str, t: &str) -> usize {
 pub fn levenshtein_damerau(s: &str, t: &str) -> usize {
     let s = s.as_bytes();
     let t = t.as_bytes();
-    let n = s.len();
+    // let n = s.len();
     let m = t.len();
 
     let mut dp: Vec<Vec<usize>> = Vec::new();
