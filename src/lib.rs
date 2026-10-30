@@ -1,4 +1,4 @@
-use std::{cmp, error::Error, fmt::{self, Write}, io, time::Instant };
+use std::{cmp, error::Error, fmt::{self, Write, write}, io, time::Instant };
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Department {
@@ -16,7 +16,9 @@ impl fmt::Display for Department {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "<strong>Department name:</strong> {}", self.name)?;
         writeln!(f, "<strong>Location:</strong> {}", self.location)?;
-        writeln!(f, "<strong>Example Room:</strong> {}", self.room)
+        writeln!(f, "<strong>Example Room:</strong> {}", self.room)?;
+        writeln!(f, "<a href=\"/modify?name={}\"></strong>Modify</a> <a href=\"/delete?name={}\"></strong>Delete</a>", self.name, self.name)
+
     }
 }
 
@@ -45,7 +47,7 @@ pub fn search(query: &str) -> String {
     }
 
     levenshtein_matches.sort_by(|a, b| a.score.cmp(&b.score));
-    let num_results = substring_matches.len() + levenshtein_matches.len();
+    let num_results = substring_matches.len() + cmp::min(5, levenshtein_matches.len());
     let elapsed = now.elapsed();
     let mut output = String::new();
 
@@ -73,7 +75,6 @@ pub fn add(name: String, location: String, room: String) -> Result<(), &'static 
         }
     };
 
-    println!("{}", name);
     let s = name.to_lowercase();
 
     for department in &departments {
@@ -91,6 +92,67 @@ pub fn add(name: String, location: String, room: String) -> Result<(), &'static 
             return Err("Error writing data");
         }
     }
+    Ok(())
+}
+
+pub fn modify(name: String, location: String, room: String) -> Result<(), &'static str> {
+    let mut departments = match read_data() {
+        Ok(departments) => departments,
+        Err(_) => {
+            return Err("Error reading data")
+        }
+    };
+    for department in &mut departments {
+        if department.name == name {
+            if location != "" {
+                department.location = location;
+            }
+            department.room = room;
+            break;
+        }
+    }
+
+    match write_data(departments) {
+        Ok(_) => { }
+        Err(_) => {
+            return Err("Error writing data");
+        }
+    }
+
+    Ok(())
+}
+
+pub fn delete(name: String) -> Result<(), &'static str> {
+    let departments = match read_data() {
+        Ok(departments) => departments,
+        Err(_) => {
+            return Err("Error reading data")
+        }
+    };
+
+    let mut result = Vec::new();
+    let mut found = false;
+
+
+    for department in departments {
+        if department.name != name {
+            result.push(department);
+        } else {
+            found = true;
+        }
+    }
+    
+    if !found {
+        return Err("Department not found")
+    }
+
+    match write_data(result) {
+        Ok(_) => { }
+        Err(_) => {
+            return Err("Error writing data")
+        }
+    }
+
     Ok(())
 }
 

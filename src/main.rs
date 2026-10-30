@@ -1,5 +1,6 @@
 use axum::{Router, extract::Form, extract::Query, response::Html, routing::get, routing::post};
-use std::collections::HashMap;
+use reqwest::dns::Name;
+use std::{collections::HashMap, result};
 use tokio::net::TcpListener;
 use whereis;
 
@@ -17,7 +18,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/", get(|| async { Html(include_str!("../index.html")) }))
         .route("/add",get(|| async { Html(include_str!("../add.html")) }))
         .route("/search", get(search))
-        .route("/added", post(add));
+        .route("/added", post(add))
+        .route("/modify", get(modify_page))
+        .route("/modified", post(modify))
+        .route("/delete", get(delete_page))
+        .route("/deleted", post(delete));
 
     let listener = TcpListener::bind("127.0.0.1:7878").await?;
 
@@ -52,6 +57,7 @@ async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
 
                 pre {{
                     margin: 0px;
+                    padding: 0px;
                 }}
 
                .container {{
@@ -120,16 +126,94 @@ fn result_page(title: &str, content: &str) -> Html<String> {
         <head>
             <meta charset="UTF-8"
             <title>{}</title>
+            <style>
+                body {{
+                    margin: 0;
+                    font-family: Arial, sans-serif;
+                }}
+
+               .container {{
+                   display: flex;
+                   flex-direction: column;
+                   align-items: center;
+                   justify-content: center;
+                   min-height: 100vh;
+               }} 
+            </style>
+
         </head>
         <body>
+            <div class="container">
             <h1>{}</h1>
             <a href="/">Back to search</a>
+            </div>
         </body>
         </html>"#,
         title, content,
-    );
+        );
 
     Html(html)
+}
+
+async fn modify_page(Query(params): Query<HashMap<String, String>>) -> Html<String> {
+    let name = params.get("name").map(String::as_str).unwrap_or("");
+    let name = escape_html(name);
+
+    let html = format!(include_str!("../modify.html"), name, name);
+
+    Html(html)
+}
+
+async fn modify(Form(params): Form<HashMap<String, String>>) -> Html<String> {
+    let name = params.get("name").map(String::as_str).unwrap_or("");
+    let location = params.get("location").map(String::as_str).unwrap_or("");
+    let room = params.get("room").map(String::as_str).unwrap_or("None");
+
+    let title;
+    let content;
+
+    match whereis::modify(name.to_string(), location.to_string(), room.to_string()) {
+        Ok(_) => {
+            title = format!("Success");
+            content = format!("Sucessfully updated location of {} to {} with example room {}", name, location, room);
+        }
+        Err(e) => {
+            title = format!("Failure");
+            content = format!("Error updating department: {}", e);
+        }
+    };
+
+    result_page(&title, &content)
+}
+
+async fn delete_page(Query(params): Query<HashMap<String, String>>) -> Html<String> {
+    let name = params.get("name").map(String::as_str).unwrap_or("");
+    let name = escape_html(name);
+
+    let html = format!(include_str!("../delete.html"), name, name);
+
+    Html(html)
+}
+
+async fn delete(Form(params): Form<HashMap<String, String>>) -> Html<String> {
+    let name = params.get("name").map(String::as_str).unwrap_or("");
+    let name = escape_html(name);
+
+    let title;
+    let content;
+
+    match whereis::delete(name.to_string()) {
+        Ok(_) => {
+            title = format!("Success");
+            content = format!("Sucessfully deleted department {}", name);
+        }
+        Err(e) => {
+            title = format!("Failure");
+            content = format!("Error updating department: {}", e);
+        }
+    };
+
+    result_page(&title, &content)
 }
 
 fn escape_html(input: &str) -> String {
