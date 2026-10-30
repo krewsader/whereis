@@ -1,7 +1,9 @@
 use axum::{Router, extract::Form, extract::Query, response::Html, routing::get, routing::post};
-use std::collections::HashMap;
+use std::{collections::HashMap, fs::{self, OpenOptions}, io::Write};
 use tokio::net::TcpListener;
 use whereis;
+use argon2::{Argon2, PasswordHasher, PasswordVerifier, PasswordHash};
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -18,6 +20,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = TcpListener::bind("0.0.0.0:80").await?;
 
     println!("Listening on http://0.0.0.0:80");
+
+    // let argon2 = argon2::default();
+    // let hash = argon2.hash_password(password)?.to_string();
+    // let parsed_hash = passwordhash::new(&hash)?;
+    // assert!(argon2::default().verify_password(password, &parsed_hash).is_ok());
+    //
+    // let mut file = openoptions::new()
+    //     .create(true)
+    //     .write(true)
+    //     .truncate(true)
+    //     .open("hash.txt")
+    //     .expect("unable to open hash.txt");
+    //
+    // writeln!(file, "{}", hash)?;
 
     axum::serve(listener, app).await?;
 
@@ -92,9 +108,15 @@ async fn add(Form(params): Form<HashMap<String, String>>) -> Html<String> {
     let name = params.get("name").map(String::as_str).unwrap_or("");
     let location = params.get("location").map(String::as_str).unwrap_or("");
     let room = params.get("room").map(String::as_str).unwrap_or("None");
+    let password = params.get("password").map(String::as_str).unwrap_or("");
+
 
     let title;
     let content;
+
+    if !check_password(password) {
+        return result_page("Failure", "Wrong password");
+    }
 
     match whereis::add(name.to_string(), location.to_string(), room.to_string()) {
         Ok(_) => {
@@ -162,9 +184,14 @@ async fn modify(Form(params): Form<HashMap<String, String>>) -> Html<String> {
     let name = params.get("name").map(String::as_str).unwrap_or("");
     let location = params.get("location").map(String::as_str).unwrap_or("");
     let room = params.get("room").map(String::as_str).unwrap_or("None");
+    let password = params.get("password").map(String::as_str).unwrap_or("");
 
     let title;
     let content;
+
+    if !check_password(password) {
+        return result_page("Failure", "Wrong password");
+    }
 
     match whereis::modify(name.to_string(), location.to_string(), room.to_string()) {
         Ok(_) => {
@@ -195,6 +222,11 @@ async fn delete_page(Query(params): Query<HashMap<String, String>>) -> Html<Stri
 async fn delete(Form(params): Form<HashMap<String, String>>) -> Html<String> {
     let name = params.get("name").map(String::as_str).unwrap_or("");
     let name = escape_html(name);
+    let password = params.get("password").map(String::as_str).unwrap_or("");
+
+    if !check_password(password) {
+        return result_page("Failure", "Wrong password");
+    }
 
     let title;
     let content;
@@ -220,4 +252,12 @@ fn escape_html(input: &str) -> String {
         .replace('>', "&gt;")
         .replace("'", "&quot;")
         .replace('\"', "&#39;")
+}
+
+fn check_password(input: &str) -> bool {
+    let hash = fs::read_to_string("hash.txt").expect("Error reading password file");
+    let hash = hash.trim();
+    let parsed_hash = PasswordHash::new(&hash).expect("Error creating hash object");
+
+    Argon2::default().verify_password(input.as_bytes(), &parsed_hash).is_ok()
 }
