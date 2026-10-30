@@ -31,6 +31,8 @@ impl fmt::Display for Department {
 }
 
 pub fn search(query: &str) -> String {
+    println!("searching for {}...", query);
+
     let now = Instant::now();
 
     let data = match read_data() {
@@ -103,6 +105,8 @@ pub fn search(query: &str) -> String {
 }
 
 pub fn add(name: String, location: String, room: String) -> Result<(), &'static str> {
+    println!("adding department {}...", name);
+
     let mut departments = match read_data() {
         Ok(departments) => departments,
         Err(_) => return Err("Error reading data"),
@@ -133,6 +137,8 @@ pub fn add(name: String, location: String, room: String) -> Result<(), &'static 
 }
 
 pub fn modify(name: String, location: String, room: String) -> Result<(), &'static str> {
+    println!("updating location of {}...", name);
+
     let mut departments = match read_data() {
         Ok(departments) => departments,
         Err(_) => return Err("Error reading data"),
@@ -158,6 +164,8 @@ pub fn modify(name: String, location: String, room: String) -> Result<(), &'stat
 }
 
 pub fn delete(name: String) -> Result<(), &'static str> {
+    println!("deleting department {}...", name);
+
     let departments = match read_data() {
         Ok(departments) => departments,
         Err(_) => return Err("Error reading data"),
@@ -239,6 +247,8 @@ pub fn matches_substring(s: &str, t: &str) -> bool {
 }
 
 fn read_data() -> Result<Vec<Department>, Box<dyn Error>> {
+    println!("reading data...");
+
     let mut rdr = csv::Reader::from_path("data.csv").expect("Error creating reader for csv");
     let mut result = Vec::new();
 
@@ -251,6 +261,8 @@ fn read_data() -> Result<Vec<Department>, Box<dyn Error>> {
 }
 
 fn write_data(departments: Vec<Department>) -> Result<(), Box<dyn Error>> {
+    println!("writing data...");
+
     let mut wtr = csv::Writer::from_path("data.csv").expect("Error creating writer for csv");
 
     for department in departments {

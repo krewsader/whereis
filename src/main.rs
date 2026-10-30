@@ -15,9 +15,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/delete", get(delete_page))
         .route("/deleted", post(delete));
 
-    let listener = TcpListener::bind("0.0.0.0:7878").await?;
+    let listener = TcpListener::bind("0.0.0.0:80").await?;
 
-    println!("Listening on http://0.0.0.0:7878");
+    println!("Listening on http://0.0.0.0:80");
 
     axum::serve(listener, app).await?;
 
