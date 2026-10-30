@@ -1,5 +1,5 @@
 use axum::{Router, extract::Form, extract::Query, response::Html, routing::get, routing::post};
-use std::{collections::HashMap};
+use std::collections::HashMap;
 use tokio::net::TcpListener;
 use whereis;
 
@@ -15,7 +15,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = Router::new()
         .route("/", get(|| async { Html(include_str!("../index.html")) }))
-        .route("/add",get(|| async { Html(include_str!("../add.html")) }))
+        .route("/add", get(|| async { Html(include_str!("../add.html")) }))
         .route("/search", get(search))
         .route("/added", post(add))
         .route("/modify", get(modify_page))
@@ -107,7 +107,10 @@ async fn add(Form(params): Form<HashMap<String, String>>) -> Html<String> {
     match whereis::add(name.to_string(), location.to_string(), room.to_string()) {
         Ok(_) => {
             title = format!("Success");
-            content = format!("Sucessfully added department {} at {} with example room {}", name, location, room);
+            content = format!(
+                "Sucessfully added department {} at {} with example room {}",
+                name, location, room
+            );
         }
         Err(e) => {
             title = format!("Failure");
@@ -149,7 +152,7 @@ fn result_page(title: &str, content: &str) -> Html<String> {
         </body>
         </html>"#,
         title, content,
-        );
+    );
 
     Html(html)
 }
@@ -174,7 +177,10 @@ async fn modify(Form(params): Form<HashMap<String, String>>) -> Html<String> {
     match whereis::modify(name.to_string(), location.to_string(), room.to_string()) {
         Ok(_) => {
             title = format!("Success");
-            content = format!("Sucessfully updated location of {} to {} with example room {}", name, location, room);
+            content = format!(
+                "Sucessfully updated location of {} to {} with example room {}",
+                name, location, room
+            );
         }
         Err(e) => {
             title = format!("Failure");

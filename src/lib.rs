@@ -1,4 +1,9 @@
-use std::{cmp, error::Error, fmt::{self, Write}, time::Instant };
+use std::{
+    cmp,
+    error::Error,
+    fmt::{self, Write},
+    time::Instant,
+};
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Department {
@@ -17,8 +22,11 @@ impl fmt::Display for Department {
         writeln!(f, "<strong>Department name:</strong> {}", self.name)?;
         writeln!(f, "<strong>Location:</strong> {}", self.location)?;
         writeln!(f, "<strong>Example Room:</strong> {}", self.room)?;
-        writeln!(f, "<a href=\"/modify?name={}\"></strong>Modify</a> <a href=\"/delete?name={}\"></strong>Delete</a>", self.name, self.name)
-
+        writeln!(
+            f,
+            "<a href=\"/modify?name={}\"></strong>Modify</a> <a href=\"/delete?name={}\"></strong>Delete</a>",
+            self.name, self.name
+        )
     }
 }
 
@@ -36,12 +44,19 @@ pub fn search(query: &str) -> String {
     let mut levenshtein_matches = Vec::new();
 
     for department in data {
-        if department.name.to_lowercase().contains(&query.to_lowercase()){
+        if department
+            .name
+            .to_lowercase()
+            .contains(&query.to_lowercase())
+        {
             substring_matches.push(department);
         } else {
             let dist = levenshtein(&department.name, query);
             if dist < cmp::max(department.name.len(), query.len()) - 2 {
-                levenshtein_matches.push(Res {department, score: dist}) 
+                levenshtein_matches.push(Res {
+                    department,
+                    score: dist,
+                })
             }
         }
     }
@@ -51,15 +66,35 @@ pub fn search(query: &str) -> String {
     let elapsed = now.elapsed();
     let mut output = String::new();
 
-    writeln!(&mut output, "<p style=\"margin: 5px\">Found {} results in {} ns ({} ms)</p>", num_results, elapsed.as_nanos(), elapsed.as_millis()).unwrap_or_else(|_| ());
-    writeln!(&mut output, "<div class=\"results\"><h2>Substring matches:</h2>").unwrap_or_else(|_| ());
+    writeln!(
+        &mut output,
+        "<p style=\"margin: 5px\">Found {} results in {} ns ({} ms)</p>",
+        num_results,
+        elapsed.as_nanos(),
+        elapsed.as_millis()
+    )
+    .unwrap_or_else(|_| ());
+    writeln!(
+        &mut output,
+        "<div class=\"results\"><h2>Substring matches:</h2>"
+    )
+    .unwrap_or_else(|_| ());
     for department in substring_matches {
         writeln!(&mut output, "<div class=\"result\">{}</div>", department).unwrap_or_else(|_| ());
     }
-    writeln!(&mut output, "</div><div class=\"results\"><h2>Misspelt matches:</h2>").unwrap_or_else(|_| ());
+    writeln!(
+        &mut output,
+        "</div><div class=\"results\"><h2>Misspelt matches:</h2>"
+    )
+    .unwrap_or_else(|_| ());
     if !levenshtein_matches.is_empty() {
         for i in 0..cmp::min(5, levenshtein_matches.len()) {
-            writeln!(&mut output, "<div class=\"result\">{}<div>", levenshtein_matches[i].department).unwrap_or_else(|_| ());
+            writeln!(
+                &mut output,
+                "<div class=\"result\">{}<div>",
+                levenshtein_matches[i].department
+            )
+            .unwrap_or_else(|_| ());
         }
     }
     writeln!(&mut output, "</div>").unwrap_or_else(|_| ());
@@ -70,9 +105,7 @@ pub fn search(query: &str) -> String {
 pub fn add(name: String, location: String, room: String) -> Result<(), &'static str> {
     let mut departments = match read_data() {
         Ok(departments) => departments,
-        Err(_) => {
-            return Err("Error reading data")
-        }
+        Err(_) => return Err("Error reading data"),
     };
 
     let s = name.to_lowercase();
@@ -85,9 +118,13 @@ pub fn add(name: String, location: String, room: String) -> Result<(), &'static 
         }
     }
 
-    departments.push( Department { name, location, room });
+    departments.push(Department {
+        name,
+        location,
+        room,
+    });
     match write_data(departments) {
-        Ok(_) => { }
+        Ok(_) => {}
         Err(_) => {
             return Err("Error writing data");
         }
@@ -98,9 +135,7 @@ pub fn add(name: String, location: String, room: String) -> Result<(), &'static 
 pub fn modify(name: String, location: String, room: String) -> Result<(), &'static str> {
     let mut departments = match read_data() {
         Ok(departments) => departments,
-        Err(_) => {
-            return Err("Error reading data")
-        }
+        Err(_) => return Err("Error reading data"),
     };
     for department in &mut departments {
         if department.name == name {
@@ -113,7 +148,7 @@ pub fn modify(name: String, location: String, room: String) -> Result<(), &'stat
     }
 
     match write_data(departments) {
-        Ok(_) => { }
+        Ok(_) => {}
         Err(_) => {
             return Err("Error writing data");
         }
@@ -125,14 +160,11 @@ pub fn modify(name: String, location: String, room: String) -> Result<(), &'stat
 pub fn delete(name: String) -> Result<(), &'static str> {
     let departments = match read_data() {
         Ok(departments) => departments,
-        Err(_) => {
-            return Err("Error reading data")
-        }
+        Err(_) => return Err("Error reading data"),
     };
 
     let mut result = Vec::new();
     let mut found = false;
-
 
     for department in departments {
         if department.name != name {
@@ -141,16 +173,14 @@ pub fn delete(name: String) -> Result<(), &'static str> {
             found = true;
         }
     }
-    
+
     if !found {
-        return Err("Department not found")
+        return Err("Department not found");
     }
 
     match write_data(result) {
-        Ok(_) => { }
-        Err(_) => {
-            return Err("Error writing data")
-        }
+        Ok(_) => {}
+        Err(_) => return Err("Error writing data"),
     }
 
     Ok(())
@@ -158,7 +188,6 @@ pub fn delete(name: String) -> Result<(), &'static str> {
 
 // might be replaced with damerau-levenshtein
 pub fn levenshtein(s: &str, t: &str) -> usize {
-
     let binding = s.to_lowercase();
     let s = binding.as_bytes();
     let binding = t.to_lowercase();
@@ -175,10 +204,13 @@ pub fn levenshtein(s: &str, t: &str) -> usize {
         for j in 0..m {
             let indicator = if s[i] == t[j] { 0 } else { 1 };
 
-            let previous_above = row[j+1];
+            let previous_above = row[j + 1];
 
-            row[j+1] = cmp::min(previous_above + 1, cmp::min(row[j] + 1, previous_diagonal + indicator));
-            
+            row[j + 1] = cmp::min(
+                previous_above + 1,
+                cmp::min(row[j] + 1, previous_diagonal + indicator),
+            );
+
             previous_diagonal = previous_above;
         }
     }
@@ -202,7 +234,6 @@ pub fn levenshtein_damerau(s: &str, t: &str) -> usize {
     0
 }
 
-
 pub fn matches_substring(s: &str, t: &str) -> bool {
     t.contains(s)
 }
@@ -225,12 +256,9 @@ fn write_data(departments: Vec<Department>) -> Result<(), Box<dyn Error>> {
     for department in departments {
         match wtr.serialize(department) {
             Ok(_) => continue,
-            Err(e) => {
-                return Err(Box::new(e))
-            }
+            Err(e) => return Err(Box::new(e)),
         };
     }
 
     Ok(())
 }
-
