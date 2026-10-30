@@ -5,14 +5,6 @@ use whereis;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // let args: Vec<String> = env::args().collect();
-    // if args.len() < 2 {
-    //     println!("Bitte Suchbegriff eingeben");
-    // } else {
-    //     let query = &args[1];
-    //     whereis::search(query);
-    // }
-
     let app = Router::new()
         .route("/", get(|| async { Html(include_str!("../index.html")) }))
         .route("/add", get(|| async { Html(include_str!("../add.html")) }))
