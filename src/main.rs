@@ -1,8 +1,8 @@
 use axum::{Router, extract::Form, extract::Query, response::Html, routing::get, routing::post};
-use std::{collections::HashMap, fs::{self}};
+use std::{collections::HashMap, fs::{self}, fs::OpenOptions, io::Write};
 use tokio::net::TcpListener;
 use whereis;
-use argon2::{Argon2, PasswordVerifier, PasswordHash};
+use argon2::{Argon2, password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
 
 
 #[tokio::main]
@@ -20,20 +20,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = TcpListener::bind("0.0.0.0:80").await?;
 
     println!("Listening on http://0.0.0.0:80");
-
-    // let argon2 = argon2::default();
-    // let hash = argon2.hash_password(password)?.to_string();
-    // let parsed_hash = passwordhash::new(&hash)?;
-    // assert!(argon2::default().verify_password(password, &parsed_hash).is_ok());
-    //
-    // let mut file = openoptions::new()
-    //     .create(true)
-    //     .write(true)
-    //     .truncate(true)
-    //     .open("hash.txt")
-    //     .expect("unable to open hash.txt");
-    //
-    // writeln!(file, "{}", hash)?;
 
     axum::serve(listener, app).await?;
 
@@ -260,4 +246,23 @@ fn check_password(input: &str) -> bool {
     let parsed_hash = PasswordHash::new(&hash).expect("Error creating hash object");
 
     Argon2::default().verify_password(input.as_bytes(), &parsed_hash).is_ok()
+}
+
+fn set_password(input: String) -> Result<(), Box<dyn std::error::Error>>{
+    let password = input.as_bytes();
+
+    let argon2 = Argon2::default();
+    let hash = argon2.hash_password(password)?.to_string();
+    let parsed_hash = PasswordHash::new(&hash)?;
+    assert!(Argon2::default().verify_password(password, &parsed_hash).is_ok());
+
+    let mut file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open("hash.txt")
+        .expect("unable to open hash.txt");
+
+    writeln!(file, "{}", hash)?;
+    Ok(())
 }
