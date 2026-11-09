@@ -49,7 +49,7 @@ pub fn search(query: &str) -> String {
         if department
             .name
             .to_lowercase()
-            .contains(&query.to_lowercase())
+            .contains(query)
         {
             substring_matches.push(department);
         } else {

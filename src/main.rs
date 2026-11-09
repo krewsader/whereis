@@ -1,9 +1,8 @@
 use axum::{Router, extract::Form, extract::Query, response::Html, routing::get, routing::post};
-use std::{collections::HashMap, fs::{self}, fs::OpenOptions, io::Write};
+use std::{collections::{HashMap, HashSet}, fs::{self}, fs::OpenOptions, io::Write};
 use tokio::net::TcpListener;
 use whereis;
 use argon2::{Argon2, password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
-
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -28,6 +27,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
     let query = params.get("query").map(String::as_str).unwrap_or("");
+
+    let query = &query.to_lowercase() as &str;
+
+    let easter_eggs = HashSet::from([
+        "god",
+        "gott",
+        "jeffrey",
+        "epstein",
+        "jeffrey epstein",
+        "waldo",
+        "walter",
+        "rick astley",
+    ]);
+
+    if easter_eggs.contains(query) {
+        return easter_egg(query);
+    }
 
     let results = format!(r#"{}"#, whereis::search(query));
 
@@ -265,4 +281,25 @@ fn set_password(input: String) -> Result<(), Box<dyn std::error::Error>>{
 
     writeln!(file, "{}", hash)?;
     Ok(())
+}
+
+fn easter_egg(query: &str) -> Html<String> {
+    let url = match query {
+        "god" | "gott" => "https://www.bibleserver.com/",
+        "jeffrey" | "epstein" | "jeffrey epstein" => "https://maps.app.goo.gl/yHwPnVNUE7i2th9u8",
+        "waldo" | "walter" => "https://whereiswaldo.com/level1.html",
+        _ => "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    };
+
+    Html(format!(r#"
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <meta http-equiv="refresh" content="0; url={}">
+            </head>
+            <body>
+                <p>Redirecting to YouTube...</p>
+            </body>
+        </html>
+    "#, url))
 }
