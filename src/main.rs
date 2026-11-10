@@ -39,6 +39,9 @@ async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
         "waldo",
         "walter",
         "rick astley",
+        "my pants",
+        "meine hosen",
+        "meine hose",
     ]);
 
     if easter_eggs.contains(query) {
@@ -288,6 +291,7 @@ fn easter_egg(query: &str) -> Html<String> {
         "god" | "gott" => "https://www.bibleserver.com/",
         "jeffrey" | "epstein" | "jeffrey epstein" => "https://maps.app.goo.gl/yHwPnVNUE7i2th9u8",
         "waldo" | "walter" => "https://whereiswaldo.com/level1.html",
+        "my pants" | "meine hosen" | "meine hose" => "https://www.youtube.com/watch?v=ZhaT7F7lMEY",
         _ => "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     };
 
@@ -298,7 +302,7 @@ fn easter_egg(query: &str) -> Html<String> {
                 <meta http-equiv="refresh" content="0; url={}">
             </head>
             <body>
-                <p>Redirecting to YouTube...</p>
+                <p>Finding your deepest desires...</p>
             </body>
         </html>
     "#, url))
