@@ -25,10 +25,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/deleted", post(delete))
         .layer(GovernorLayer::new(governor_conf));
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 80));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     let listener = TcpListener::bind(addr).await?;
 
-    println!("Listening on http://0.0.0.0:80");
+    println!("Listening on http://0.0.0.0:8080");
 
     axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
 
