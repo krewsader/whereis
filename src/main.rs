@@ -111,8 +111,11 @@ async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
 
 async fn add(Form(params): Form<HashMap<String, String>>) -> Html<String> {
     let name = params.get("name").map(String::as_str).unwrap_or("");
+    let name = escape_html(name);
     let location = params.get("location").map(String::as_str).unwrap_or("");
+    let location = escape_html(location);
     let room = params.get("room").map(String::as_str).unwrap_or("None");
+    let room = escape_html(room);
     let password = params.get("password").map(String::as_str).unwrap_or("");
 
 
