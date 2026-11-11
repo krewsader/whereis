@@ -1,11 +1,19 @@
-use axum::{Router, extract::Form, extract::Query, response::Html, routing::get, routing::post};
-use std::{collections::{HashMap, HashSet}, fs::{self}, fs::OpenOptions, io::Write};
+use axum::{Router, extract::{Form, Query}, response::Html, routing::{get, post}, };
+use std::{io::Write, net::SocketAddr, time::Duration};
+use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};
+use std::{collections::{HashMap, HashSet}, fs::{self, OpenOptions}, };
 use tokio::net::TcpListener;
 use whereis;
 use argon2::{Argon2, password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let governor_conf = GovernorConfigBuilder::default()
+        .per_second(1)
+        .burst_size(10)
+        .finish()
+        .unwrap();
+
     let app = Router::new()
         .route("/", get(|| async { Html(include_str!("../index.html")) }))
         .route("/add", get(|| async { Html(include_str!("../add.html")) }))
@@ -14,19 +22,75 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/modify", get(modify_page))
         .route("/modified", post(modify))
         .route("/delete", get(delete_page))
-        .route("/deleted", post(delete));
+        .route("/deleted", post(delete))
+        .layer(GovernorLayer::new(governor_conf));
 
-    let listener = TcpListener::bind("0.0.0.0:80").await?;
+    let addr = SocketAddr::from(([0, 0, 0, 0], 80));
+    let listener = TcpListener::bind(addr).await?;
 
     println!("Listening on http://0.0.0.0:80");
 
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
 
     Ok(())
 }
 
 async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
     let query = params.get("query").map(String::as_str).unwrap_or("");
+
+    if query.len() > 256 {
+        return Html(format!(
+        r#"<DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Results</title>
+
+            <style>
+                body {{
+                    margin: 0;
+                    font-family: Arial, sans-serif;
+                }}
+
+                h2 {{
+                    margin: 4px;
+                }}
+
+                pre {{
+                    margin: 0px;
+                    padding: 0px;
+                }}
+
+               .container {{
+                   display: flex;
+                   flex-direction: column;
+                   align-items: center;
+                   justify-content: center;
+                   min-height: 100vh;
+               }} 
+
+               .results {{
+                    font-family: Arial, sans-serif;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    margin-top: 4px;
+                    margin-bottom: 16px;
+               }}
+
+               .result {{
+                font-family: Arial, sans-serif;
+               }}
+            </style>
+        </head>
+        <body>
+        <div class="container">
+            <h1>Query too long! Try a different one</h1>
+            <a href="/">Back to search</a>
+        </div>
+        </body>
+        </html>"#))
+    }
 
     let query = &query.to_lowercase() as &str;
 
@@ -42,6 +106,11 @@ async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
         "my pants",
         "meine hosen",
         "meine hose",
+        "pascal",
+        "big p",
+        "kenobi",
+        "obi-wan kenobi",
+        "obi wan kenobi",
     ]);
 
     if easter_eggs.contains(query) {
@@ -295,6 +364,8 @@ fn easter_egg(query: &str) -> Html<String> {
         "jeffrey" | "epstein" | "jeffrey epstein" => "https://maps.app.goo.gl/yHwPnVNUE7i2th9u8",
         "waldo" | "walter" => "https://whereiswaldo.com/level1.html",
         "my pants" | "meine hosen" | "meine hose" => "https://www.youtube.com/watch?v=ZhaT7F7lMEY",
+        "kenobi" | "obi wan kenobi" | "obi-wan kenobi" => "https://media.tenor.com/WuOwfnsLcfYAAAAC/star-wars-obi-wan-kenobi.gif",
+        "pascal" | "big p" => "https://www.admin.ch/de",
         _ => "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     };
 
