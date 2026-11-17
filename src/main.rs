@@ -1,13 +1,27 @@
-use axum::{Router, extract::{Form, Query}, response::Html, routing::{get, post}, };
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash},
+};
+use axum::{
+    Router,
+    extract::{Form, Query},
+    response::Html,
+    routing::{get, post},
+};
+use axum_server::tls_rustls::RustlsConfig;
+use std::{
+    collections::{HashMap, HashSet},
+    fs::{self, OpenOptions},
+};
 use std::{io::Write, net::SocketAddr, time::Duration};
-use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};
-use std::{collections::{HashMap, HashSet}, fs::{self, OpenOptions}, };
 use tokio::net::TcpListener;
+use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};
 use whereis;
-use argon2::{Argon2, password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenvy::dotenv().ok();
+
     let governor_conf = GovernorConfigBuilder::default()
         .per_second(1)
         .burst_size(10)
@@ -24,13 +38,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/delete", get(delete_page))
         .route("/deleted", post(delete))
         .layer(GovernorLayer::new(governor_conf));
+    let exe_path = std::env::current_exe().expect("Failed to get executable path");
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
-    let listener = TcpListener::bind(addr).await?;
+    let exe_dir = exe_path
+        .parent()
+        .expect("Failed to get executable directory");
 
-    println!("Listening on http://0.0.0.0:8080");
+    let env_path = exe_dir.join(".env");
 
-    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
+    dotenvy::from_path(env_path).expect("Failed to load .env file");
+    println!("Working directory: {:?}", std::env::current_dir());
+    println!("PORT env: {:?}", std::env::var("PORT"));
+
+    let cert_path = std::env::var("TLS_CERT_PATH").expect("TLS_CERT_PATH not set");
+    let key_path = std::env::var("TLS_KEY_PATH").expect("TLS_KEY_PATH not set");
+    println!("TLS_CERT_PATH: {:?}", cert_path);
+    println!("TLS_KEY: {:?}", key_path);
+    let config = RustlsConfig::from_pem_file(cert_path, key_path)
+        .await
+        .map_err(|e| {println!("Error configuring TLS: {:#}", e); e})?;
+
+
+    let port: u16 = std::env::var("PORT")
+        .unwrap_or_else(|_| "8444".to_string())
+        .parse()?;
+
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
+    /*     let listener = TcpListener::bind(addr).await?; */
+
+    println!("Listening on https://0.0.0.0:{}", port);
+
+    axum_server::bind_rustls(addr, config)
+        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
+        .await?;
+
+    /*     axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?; */
 
     Ok(())
 }
@@ -40,7 +82,7 @@ async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
 
     if query.len() > 256 {
         return Html(format!(
-        r#"<DOCTYPE html>
+            r#"<DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
@@ -89,7 +131,8 @@ async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
             <a href="/">Back to search</a>
         </div>
         </body>
-        </html>"#))
+        </html>"#
+        ));
     }
 
     let query = &query.to_lowercase() as &str;
@@ -186,7 +229,6 @@ async fn add(Form(params): Form<HashMap<String, String>>) -> Html<String> {
     let room = params.get("room").map(String::as_str).unwrap_or("None");
     let room = escape_html(room);
     let password = params.get("password").map(String::as_str).unwrap_or("");
-
 
     let title;
     let content;
@@ -336,16 +378,22 @@ fn check_password(input: &str) -> bool {
     let hash = hash.trim();
     let parsed_hash = PasswordHash::new(&hash).expect("Error creating hash object");
 
-    Argon2::default().verify_password(input.as_bytes(), &parsed_hash).is_ok()
+    Argon2::default()
+        .verify_password(input.as_bytes(), &parsed_hash)
+        .is_ok()
 }
 
-fn set_password(input: String) -> Result<(), Box<dyn std::error::Error>>{
+fn set_password(input: String) -> Result<(), Box<dyn std::error::Error>> {
     let password = input.as_bytes();
 
     let argon2 = Argon2::default();
     let hash = argon2.hash_password(password)?.to_string();
     let parsed_hash = PasswordHash::new(&hash)?;
-    assert!(Argon2::default().verify_password(password, &parsed_hash).is_ok());
+    assert!(
+        Argon2::default()
+            .verify_password(password, &parsed_hash)
+            .is_ok()
+    );
 
     let mut file = OpenOptions::new()
         .create(true)
@@ -364,12 +412,15 @@ fn easter_egg(query: &str) -> Html<String> {
         "jeffrey" | "epstein" | "jeffrey epstein" => "https://maps.app.goo.gl/yHwPnVNUE7i2th9u8",
         "waldo" | "walter" => "https://whereiswaldo.com/level1.html",
         "my pants" | "meine hosen" | "meine hose" => "https://www.youtube.com/watch?v=ZhaT7F7lMEY",
-        "kenobi" | "obi wan kenobi" | "obi-wan kenobi" => "https://media.tenor.com/WuOwfnsLcfYAAAAC/star-wars-obi-wan-kenobi.gif",
+        "kenobi" | "obi wan kenobi" | "obi-wan kenobi" => {
+            "https://media.tenor.com/WuOwfnsLcfYAAAAC/star-wars-obi-wan-kenobi.gif"
+        }
         "pascal" | "big p" => "https://www.admin.ch/de",
         _ => "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     };
 
-    Html(format!(r#"
+    Html(format!(
+        r#"
         <!DOCTYPE html>
         <html>
             <head>
@@ -379,5 +430,7 @@ fn easter_egg(query: &str) -> Html<String> {
                 <p>Finding your deepest desires...</p>
             </body>
         </html>
-    "#, url))
+    "#,
+        url
+    ))
 }

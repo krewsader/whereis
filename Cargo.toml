@@ -13,3 +13,5 @@ reqwest = "0.13.5"
 axum = "0.8.9"
 argon2 = "0.6.0"
 tower_governor = "0.8.0"
+axum-server = { version = "0.7", features = ["tls-rustls"]}
+dotenvy = "0.15.7"

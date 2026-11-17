@@ -1,3 +1,6 @@
 /target
 hash.txt
 data.csv
+*.pem
+*.pfx
+.env
