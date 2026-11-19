@@ -424,8 +424,11 @@ fn easter_egg(query: &str) -> Html<String> {
         <!DOCTYPE html>
         <html>
             <head>
-                <meta http-equiv="refresh" content="0; url={}">
+                <script>
+                    window.top.location.replace("{}");
+                </script>
             </head>
+
             <body>
                 <p>Finding your deepest desires...</p>
             </body>

@@ -46,14 +46,10 @@ pub fn search(query: &str) -> String {
     let mut levenshtein_matches = Vec::new();
 
     for department in data {
-        if department
-            .name
-            .to_lowercase()
-            .contains(query)
-        {
+        if department.name.to_lowercase().contains(query) {
             substring_matches.push(department);
         } else {
-            let dist = levenshtein(&department.name, query);
+            let dist = levenshtein_damerau(&department.name, query);
             if dist < cmp::max(department.name.len(), query.len()) - 2 {
                 levenshtein_matches.push(Res {
                     department,
@@ -229,17 +225,61 @@ pub fn levenshtein(s: &str, t: &str) -> usize {
 pub fn levenshtein_damerau(s: &str, t: &str) -> usize {
     let s = s.as_bytes();
     let t = t.as_bytes();
-    // let n = s.len();
+
+    let n = s.len();
     let m = t.len();
 
-    let mut dp: Vec<Vec<usize>> = Vec::new();
+    let max_dist = n + m;
 
-    dp.push((0..=m).collect());
-    for j in 0..=m {
-        dp[j].push(j);
+    let mut dp: Vec<Vec<usize>> = vec![vec![0; m + 2]; n + 2];
+
+    dp[0][0] = max_dist;
+
+    for i in 0..=n {
+        dp[i + 1][0] = max_dist;
+        dp[i + 1][1] = i;
     }
 
-    0
+    for j in 0..=m {
+        dp[0][j + 1] = max_dist;
+        dp[1][j + 1] = j;
+    }
+    
+    let mut last = [0usize; 256];
+    
+    for i in 1..=n {
+        let mut db = 0usize;
+
+        for j in 1..=m {
+            let i1 = last[t[j -1] as usize];
+            let j1 = db;
+
+            let cost = if s[i - 1] == t[j - 1] {
+                db = j;
+                0
+            } else{
+                1
+            };
+
+            dp[i + 1][j + 1] = cmp::min(
+                dp[i][j] + cost,
+                cmp::min(
+                    dp[i + 1][j] + 1,
+                    cmp::min(
+                        dp[i][j + 1] + 1,
+                        dp[i1][j1]
+                        + (i - i1 - 1)
+                        + 1
+                        + (j - j1 - 1),
+                    ),
+                ),
+            );
+        }
+
+        last[s[i - 1] as usize] = i;
+    }
+
+    dp[n + 1][m + 1]
 }
 
 pub fn matches_substring(s: &str, t: &str) -> bool {
