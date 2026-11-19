@@ -12,9 +12,9 @@ use axum_server::tls_rustls::RustlsConfig;
 use std::{
     collections::{HashMap, HashSet},
     fs::{self, OpenOptions},
+    io::Write,
 };
-use std::{io::Write, net::SocketAddr, time::Duration};
-use tokio::net::TcpListener;
+use std::net::SocketAddr;
 use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};
 use whereis;
 
@@ -383,7 +383,7 @@ fn check_password(input: &str) -> bool {
         .is_ok()
 }
 
-fn set_password(input: String) -> Result<(), Box<dyn std::error::Error>> {
+fn _set_password(input: String) -> Result<(), Box<dyn std::error::Error>> {
     let password = input.as_bytes();
 
     let argon2 = Argon2::default();
