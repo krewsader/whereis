@@ -49,7 +49,7 @@ pub fn search(query: &str) -> String {
         if department.name.to_lowercase().contains(query) {
             substring_matches.push(department);
         } else {
-            let dist = levenshtein_damerau(&department.name, query);
+            let dist = levenshtein(&department.name, query);
             if dist < cmp::max(department.name.len(), query.len()) - 2 {
                 levenshtein_matches.push(Res {
                     department,
