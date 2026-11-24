@@ -154,6 +154,7 @@ async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
         "kenobi",
         "obi-wan kenobi",
         "obi wan kenobi",
+        "garfield",
     ]);
 
     if easter_eggs.contains(query) {
@@ -416,6 +417,7 @@ fn easter_egg(query: &str) -> Html<String> {
             "https://media.tenor.com/WuOwfnsLcfYAAAAC/star-wars-obi-wan-kenobi.gif"
         }
         "pascal" | "big p" => "https://www.admin.ch/de",
+        "garfield" => "https://www.youtube.com/watch?v=NAh9oLs67Cw",
         _ => "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     };
 
