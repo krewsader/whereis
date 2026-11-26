@@ -14,7 +14,7 @@ pub struct Department {
 
 pub struct Res {
     department: Department,
-    score: usize,
+    score: f64,
 }
 
 impl fmt::Display for Department {
@@ -49,17 +49,23 @@ pub fn search(query: &str) -> String {
         if department.name.to_lowercase().contains(query) {
             substring_matches.push(department);
         } else {
-            let dist = levenshtein(&department.name, query);
-            if dist < cmp::max(department.name.len(), query.len()) - 2 {
+            /*             let dist = levenshtein(&department.name, query);
+                           if dist < cmp::max(department.name.len(), query.len()) - 2 {
+                           levenshtein_matches.push(Res {
+                           department,
+                           score: dist,
+                           }) */
+            let dist = 1.0 - (levenshtein(&department.name, query) as f64 / cmp::max(department.name.len(), query.len()) as f64);
+            if dist > 0.7 {
                 levenshtein_matches.push(Res {
                     department,
                     score: dist,
-                })
+                });
             }
         }
-    }
+        }
 
-    levenshtein_matches.sort_by(|a, b| a.score.cmp(&b.score));
+    levenshtein_matches.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
     let num_results = substring_matches.len() + cmp::min(5, levenshtein_matches.len());
     let elapsed = now.elapsed();
     let mut output = String::new();
