@@ -1,6 +1,7 @@
 /target
 hash.txt
 data.csv
+easter_eggs.json
 *.pem
 *.pfx
 .env

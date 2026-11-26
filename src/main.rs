@@ -10,9 +10,9 @@ use axum::{
 };
 use axum_server::tls_rustls::RustlsConfig;
 use std::{
-    collections::{HashMap, HashSet},
-    fs::{self, OpenOptions},
-    io::Write,
+    collections::HashMap,
+    fs::{self, OpenOptions, File},
+    io::{Write, BufWriter, BufReader},
 };
 use std::net::SocketAddr;
 use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};
@@ -137,28 +137,10 @@ async fn search(Query(params): Query<HashMap<String, String>>) -> Html<String> {
 
     let query = &query.to_lowercase() as &str;
 
-    let easter_eggs = HashSet::from([
-        "god",
-        "gott",
-        "jeffrey",
-        "epstein",
-        "jeffrey epstein",
-        "waldo",
-        "walter",
-        "rick astley",
-        "my pants",
-        "meine hosen",
-        "meine hose",
-        "pascal",
-        "big p",
-        "kenobi",
-        "obi-wan kenobi",
-        "obi wan kenobi",
-        "garfield",
-    ]);
+    let easter_eggs = read_easter_eggs().unwrap_or_else(|_| HashMap::new());
 
-    if easter_eggs.contains(query) {
-        return easter_egg(query);
+    if easter_eggs.contains_key(query) {
+        return easter_egg(query, easter_eggs);
     }
 
     let results = format!(r#"{}"#, whereis::search(query));
@@ -407,19 +389,8 @@ fn _set_password(input: String) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn easter_egg(query: &str) -> Html<String> {
-    let url = match query {
-        "god" | "gott" => "https://www.bibleserver.com/",
-        "jeffrey" | "epstein" | "jeffrey epstein" => "https://maps.app.goo.gl/yHwPnVNUE7i2th9u8",
-        "waldo" | "walter" => "https://whereiswaldo.com/level1.html",
-        "my pants" | "meine hosen" | "meine hose" => "https://www.youtube.com/watch?v=ZhaT7F7lMEY",
-        "kenobi" | "obi wan kenobi" | "obi-wan kenobi" => {
-            "https://media.tenor.com/WuOwfnsLcfYAAAAC/star-wars-obi-wan-kenobi.gif"
-        }
-        "pascal" | "big p" => "https://www.admin.ch/de",
-        "garfield" => "https://www.youtube.com/watch?v=NAh9oLs67Cw",
-        _ => "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    };
+fn easter_egg(query: &str, easter_eggs: HashMap<String, String>) -> Html<String> {
+    let url = easter_eggs.get(query).map(|s| s.as_str()).unwrap_or_else(|| "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
 
     Html(format!(
         r#"
@@ -438,4 +409,13 @@ fn easter_egg(query: &str) -> Html<String> {
     "#,
         url
     ))
+}
+
+fn read_easter_eggs() -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    let file = File::open("easter_eggs.json")?;
+    let reader = BufReader::new(file);
+
+    let map = serde_json::from_reader(reader)?;
+
+    Ok(map)
 }

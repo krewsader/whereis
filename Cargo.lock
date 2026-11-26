@@ -2628,6 +2628,7 @@ dependencies = [
  "mini-redis",
  "reqwest",
  "serde",
+ "serde_json",
  "tokio",
  "tower_governor",
 ]
