@@ -12,7 +12,7 @@ use axum_server::tls_rustls::RustlsConfig;
 use std::{
     collections::HashMap,
     fs::{self, OpenOptions, File},
-    io::{Write, BufWriter, BufReader},
+    io::{Write, BufReader},
 };
 use std::net::SocketAddr;
 use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};
